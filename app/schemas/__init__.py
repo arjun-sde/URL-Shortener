@@ -1,2 +1,2 @@
-from .url_schemas import URLCreate, URLResponse
+from .url_schemas import URLCreateSchema, ShortenResponseSchema, URLInfoSchema
 

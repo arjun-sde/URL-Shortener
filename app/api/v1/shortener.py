@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 
 from app.schemas.url_schemas import URLCreateSchema, ShortenResponseSchema, URLInfoSchema
-from app.core.db import get_session
+from app.core import get_session
 from app.services.impl.url_service_impl import URLServiceImpl
 from app.core.config import settings
 

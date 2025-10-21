@@ -1,15 +1,23 @@
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings
+from typing import List
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = Field(..., env="DATABASE_URL")
-    BASE_URL: str = Field("http://localhost:8000", env="BASE_URL")
-    HASHIDS_SALT: str = Field("change_this", env="HASHIDS_SALT")
-    HASHIDS_MIN_LENGTH: int = Field(6, env="HASHIDS_MIN_LENGTH")
-    ENABLE_MULTI_TENANT: bool = Field(True, env="ENABLE_MULTI_TENANT")
-    log_level: str = Field("INFO", env="LOG_LEVEL")
+    PROJECT_NAME: str = "FastURL Shortener"
+    API_V1_STR: str = "/api/v1"
+    DATABASE_URL: str
+    BACKEND_CORS_ORIGINS: List[str] = ["*"]
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    BASE_URL: str = "http://localhost:8000"
+    HASHIDS_SALT: str = "change_this_to_a_secure_random_salt"
+    HASHIDS_MIN_LENGTH: int = 6
+    ENABLE_MULTI_TENANT: bool = False
+    LOG_LEVEL: str = "INFO"
+
+    # Pydantic v2 uses model_config instead of Config
+    model_config = {
+        "env_file": ".env",
+        "extra": "ignore",
+    }
+
 
 settings = Settings()

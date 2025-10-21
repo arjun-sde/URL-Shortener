@@ -1,19 +1,58 @@
 import logging
+from contextlib import asynccontextmanager
+from logging.config import dictConfig
+
 from fastapi import FastAPI
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
+from starlette_context.middleware import ContextMiddleware
+
 from app.api.v1 import v1_router
-from app.core.db import init_db
 from app.core.config import settings
+from app.core import logging_config
 
-logging.basicConfig(level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s - %(message)s")
+# Configure logging
+dictConfig(logging_config)
+logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Fast URL Shortener", version="1.0.0")
-app.include_router(v1_router)  # prefix defined in v1/__init__.py
 
-@app.on_event("startup")
-async def startup():
-    # create tables in dev/test (no-op if already created)
-    await init_db()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handles startup and shutdown of application resources."""
+    logger.info("Application starting up...")
+    try:
+        yield
+    finally:
+        logger.info("Application shutting down...")
 
-@app.get("/health", tags=["Health"])
-async def health():
-    return {"status": "ok"}
+
+def get_application() -> FastAPI:
+    """Factory to build the FastAPI app with all configurations."""
+    middleware = [
+        Middleware(ContextMiddleware),
+        Middleware(
+            CORSMiddleware,
+            allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        ),
+    ]
+
+    _app = FastAPI(
+        title=settings.PROJECT_NAME,
+        version="1.0.0",
+        lifespan=lifespan,
+        middleware=middleware,
+    )
+
+
+
+    return _app
+
+
+# The ASGI app instance used by uvicorn
+app = get_application()
+
+# Register routers (v1 APIs)
+app.include_router(v1_router, prefix=settings.API_V1_STR)

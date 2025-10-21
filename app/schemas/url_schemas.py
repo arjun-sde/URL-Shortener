@@ -10,6 +10,9 @@ class ShortenResponseSchema(BaseModel):
     short_url: AnyUrl
     short_code: str
 
+from datetime import datetime
+from pydantic import BaseModel, AnyUrl
+
 class URLInfoSchema(BaseModel):
     id: int
     domain: str
@@ -18,5 +21,8 @@ class URLInfoSchema(BaseModel):
     clicks: int
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    # Pydantic v2 style
+    model_config = {
+        "from_attributes": True  # replaces orm_mode=True
+    }
+

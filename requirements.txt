@@ -1,0 +1,8 @@
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+SQLAlchemy==2.0.40
+asyncpg==0.31.0
+python-dotenv==1.1.0
+pydantic==2.11.4
+pydantic-settings==2.9.1
+starlette-context==0.4.0

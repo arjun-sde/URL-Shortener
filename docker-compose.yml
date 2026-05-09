@@ -1,7 +1,6 @@
-version: "3.8"
 services:
   db:
-    image: postgres:15
+    image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -23,6 +22,8 @@ services:
       - db
     env_file:
       - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/url_shortener
 
 volumes:
   db_data:

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, func, UniqueConstraint
+from sqlalchemy import BigInteger, Column, DateTime, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -6,7 +6,7 @@ Base = declarative_base()
 class URL(Base):
     __tablename__ = "urls"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(BigInteger, primary_key=True, index=True, autoincrement=False)
     domain = Column(String(255), nullable=False, index=True)
     original_url = Column(Text, nullable=False)
     short_code = Column(String(64), nullable=False, index=True)

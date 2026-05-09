@@ -1,10 +1,12 @@
 import logging
+
+from pydantic import AnyUrl
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.interface.url_service_interface import URLServiceInterface
 from app.dao.impl.url_dao_impl import URLDAOImpl
 from app.core.models import URL
-from app.utils.shortener import id_to_code, random_code
+from app.utils.shortener import generate_url_id, id_to_code
 
 logger = logging.getLogger(__name__)
 
@@ -28,29 +30,27 @@ class URLServiceImpl(URLServiceInterface):
         logger.info(f"Initializing URLServiceImpl singleton id={id(self)}")
         self._initialized = True
 
-    async def shorten(self, session: AsyncSession, original_url: str, domain: str) -> URL:
-        # Create new URL row and flush to get id
-        url_obj = URL(domain=domain, original_url=original_url, short_code="")
-        url_obj = await self.dao.create(session, url_obj)
+    async def shorten(self, session: AsyncSession, original_url: AnyUrl, domain: str) -> URL:
+        for attempt in range(3):
+            url_id = generate_url_id()
+            url_obj = URL(
+                id=url_id,
+                domain=domain,
+                original_url=str(original_url),
+                short_code=id_to_code(url_id),
+                clicks=0,
+            )
 
-        # Generate deterministic code from the ID
-        code = id_to_code(url_obj.id)
-        if not code:
-            code = random_code(6)
-        url_obj.short_code = code
+            try:
+                url_obj = await self.dao.create(session, url_obj)
+                await session.commit()
+                await session.refresh(url_obj)
+                return url_obj
+            except IntegrityError:
+                await session.rollback()
+                logger.warning("short code collision while creating URL", extra={"attempt": attempt + 1})
 
-        try:
-            # commit the new row with short_code
-            await session.commit()
-        except IntegrityError:
-            # collision within domain - fallback to random and retry commit
-            await session.rollback()
-            url_obj.short_code = random_code(6)
-            session.add(url_obj)
-            await session.commit()
-
-        await session.refresh(url_obj)
-        return url_obj
+        raise RuntimeError("failed to create a unique short URL after retries")
 
     async def get_and_increment(self, session: AsyncSession, domain: str, short_code: str):
         url_obj = await self.dao.get_by_domain_and_code(session, domain, short_code)

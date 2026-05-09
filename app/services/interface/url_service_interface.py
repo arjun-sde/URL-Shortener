@@ -1,9 +1,12 @@
 from typing import Optional
+
+from pydantic import AnyUrl
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.models import URL
 
 class URLServiceInterface:
-    async def shorten(self, session: AsyncSession, original_url: str, domain: str) -> URL:
+    async def shorten(self, session: AsyncSession, original_url: AnyUrl, domain: str) -> URL:
         raise NotImplementedError
 
     async def get_and_increment(self, session: AsyncSession, domain: str, short_code: str) -> Optional[URL]:

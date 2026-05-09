@@ -1,1 +1,1 @@
-from .shortener import id_to_code, code_to_id, random_code
+from .shortener import code_to_id, generate_url_id, id_to_code

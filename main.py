@@ -8,6 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette_context.middleware import ContextMiddleware
 
 from app.api.v1 import v1_router
+from app.api.v1.shortener import redirect_router
 from app.core.config import settings
 from app.core import logging_config
 
@@ -41,12 +42,15 @@ def get_application() -> FastAPI:
 
     _app = FastAPI(
         title=settings.PROJECT_NAME,
+        description="FastAPI URL shortener with PostgreSQL, Snowflake-style IDs, and multi-tenant domain support.",
         version="1.0.0",
         lifespan=lifespan,
         middleware=middleware,
     )
 
-
+    @_app.get("/health", tags=["health"])
+    async def health_check():
+        return {"status": "ok"}
 
     return _app
 
@@ -56,3 +60,4 @@ app = get_application()
 
 # Register routers (v1 APIs)
 app.include_router(v1_router, prefix=settings.API_V1_STR)
+app.include_router(redirect_router)

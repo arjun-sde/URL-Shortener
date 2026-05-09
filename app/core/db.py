@@ -19,7 +19,7 @@ async_session = sessionmaker(
     class_=AsyncSession,
 )
 
-async def get_session() -> AsyncSession:
+async def get_session():
     """
     Dependency for FastAPI endpoints.
     Provides an AsyncSession per request.
